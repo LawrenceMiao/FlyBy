@@ -45,7 +45,7 @@ export default function Homepage() {
           )}
         >
           <div className="w-full h-full pointer-events-none z-10 flex flex-col gap-1 p-6 ">
-            <VideoPlayer />
+            <VideoPlayer setData={setData}/>
           </div>
         </div>
 

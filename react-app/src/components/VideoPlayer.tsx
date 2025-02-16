@@ -3,13 +3,20 @@ import Hls from "hls.js";
 import { UploadIcon, CheckCircledIcon } from "@radix-ui/react-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const VideoPlayer: React.FC = () => {
+interface VideoPlayerProps {
+  setData: (data: any) => void;
+}
+
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ setData }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsInstance = useRef<Hls | null>(null);
 
-  const [videoAvailable, setVideoAvailable] = useState(false);
-  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoAvailable, setVideoAvailable] = useState<boolean>(false);
+  const [videoLoaded, setVideoLoaded] = useState<boolean>(false);
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [UIUD, setUIUD] = useState<string>("");
+
+  const API_BASE_URL = "http://74.70.76.86:8000";
 
   useEffect(() => {
     console.log("Component mounted, calling stream...");
@@ -17,31 +24,43 @@ const VideoPlayer: React.FC = () => {
     const video = videoRef.current;
     if (!video) return;
 
-    if (Hls.isSupported()) {
-      if (hlsInstance.current) {
-        hlsInstance.current.destroy();
+    const loadHlsStream = () => {
+      if (Hls.isSupported()) {
+        if (hlsInstance.current) {
+          hlsInstance.current.destroy();
+        }
+
+        const hls = new Hls({ debug: false });
+        hlsInstance.current = hls;
+        hls.loadSource(API_BASE_URL + "/stream/" + UIUD);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log("HLS manifest loaded successfully.");
+          console.log("Video loaded:", videoLoaded, "Video available:", videoAvailable);
+          setVideoAvailable(true);
+          loadData();
+          video.play().catch(error => console.warn("Autoplay blocked:", error));
+        });
+
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          console.error("HLS.js error:", data);
+          setVideoAvailable(false);
+        });
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = API_BASE_URL + "/stream/" + UIUD;
+        video.load();
+        loadData();
       }
+    };
 
-      const hls = new Hls({ debug: false });
-      hlsInstance.current = hls;
-      hls.loadSource("http://74.70.76.86:8000/stream");
-      hls.attachMedia(video);
-
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        console.log("HLS manifest loaded successfully.");
-        console.log("Video loaded:", videoLoaded, "Video available:", videoAvailable);
-        setVideoAvailable(true);
-        video.play().catch(error => console.warn("Autoplay blocked:", error));
-      });
-
-      hls.on(Hls.Events.ERROR, (_, data) => {
-        console.error("HLS.js error:", data);
-        setVideoAvailable(false);
-      });
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = "http://74.70.76.86:8000/stream";
-      video.load();
+    const loadData = async () => {
+      const response = await fetch(API_BASE_URL + "/data/" + UIUD);
+      const data = await response.json();
+      setData(data);
     }
+
+    loadHlsStream();
 
     return () => {
       if (hlsInstance.current) {
@@ -65,12 +84,15 @@ const VideoPlayer: React.FC = () => {
     formData.append("file", selectedVideo);
 
     try {
-      const response = await fetch("http://74.70.76.86:8000/upload", {
+      const response = await fetch(API_BASE_URL + "/upload", {
         method: "POST",
         body: formData,
       });
 
       if (response.ok) {
+        const data = await response.json();
+        const videoUuid = data.hls_manifest.split("/").pop();
+        setUIUD(videoUuid);
         console.log("Upload successful");
       } else {
         console.error("Upload failed");
