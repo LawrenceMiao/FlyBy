@@ -1,7 +1,6 @@
 import React, { useState , useEffect, useRef } from "react";
 import Hls from "hls.js";
 import { UploadIcon, CheckCircledIcon } from "@radix-ui/react-icons";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface VideoPlayerProps {
   setData: (data: any) => void;
@@ -11,19 +10,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ setData }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsInstance = useRef<Hls | null>(null);
 
-  const [videoAvailable, setVideoAvailable] = useState<boolean>(false);
+  const [_, setVideoAvailable] = useState<boolean>(false);
   const [videoLoaded, setVideoLoaded] = useState<boolean>(false);
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [UIUD, setUIUD] = useState<string>("");
 
   const API_BASE_URL = "http://74.70.76.86:8000";
 
+  // HLS STREAMING
   useEffect(() => {
     console.log("Component mounted, calling stream...");
-    console.log("Video loaded:", videoLoaded, "Video available:", videoAvailable);
-    const video = videoRef.current;
-    if (!video) return;
+    console.log(UIUD);
 
+    const video = videoRef.current;
+    if (!video || UIUD === "") return;
+
+    // Loads the HLS Stream
     const loadHlsStream = () => {
       if (Hls.isSupported()) {
         if (hlsInstance.current) {
@@ -32,12 +34,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ setData }) => {
 
         const hls = new Hls({ debug: false });
         hlsInstance.current = hls;
-        hls.loadSource(API_BASE_URL + "/stream/" + UIUD);
+
+        // creating stream URL for the video
+        const streamUrl = API_BASE_URL + "/stream/" + UIUD;
+        hls.loadSource(streamUrl);
         hls.attachMedia(video);
 
+        // HLS events
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           console.log("HLS manifest loaded successfully.");
-          console.log("Video loaded:", videoLoaded, "Video available:", videoAvailable);
           setVideoAvailable(true);
           loadData();
           video.play().catch(error => console.warn("Autoplay blocked:", error));
@@ -54,6 +59,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ setData }) => {
       }
     };
 
+    // Loads the Data returned from the Model
     const loadData = async () => {
       const response = await fetch(API_BASE_URL + "/data/" + UIUD);
       const data = await response.json();
@@ -67,8 +73,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ setData }) => {
         hlsInstance.current.destroy();
       }
     };
-  }, [videoLoaded]);
+  }, [videoLoaded, UIUD]);
 
+  // FILE UPLOADING
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setSelectedVideo(event.target.files[0]);
@@ -91,7 +98,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ setData }) => {
 
       if (response.ok) {
         const data = await response.json();
-        const videoUuid = data.hls_manifest.split("/").pop();
+        const videoUuid = data.video_uuid;
         setUIUD(videoUuid);
         console.log("Upload successful");
       } else {
