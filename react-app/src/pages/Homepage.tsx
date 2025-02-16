@@ -1,9 +1,13 @@
 import { cn } from "@/lib/utils";
-// import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { BentoGrid } from "@/components/magicui/bento-grid";
+import VideoPlayer from "@/components/VideoPlayer";
 
 
 export default function Homepage() {
+  const [data, setData] = useState(null);
+  const [isloading, setLoading] = useState(false);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 pt-4">
       <h1 className="text-4xl font-bold mb-4">TACO</h1>
@@ -20,12 +24,8 @@ export default function Homepage() {
             "lg:row-start-1 lg:row-end-4 lg:col-start-1 lg:col-end-4",
           )}
         >
-          <div className="pointer-events-none z-10 flex flex-col gap-1 p-6 ">
-            {/* <Icon className="h-12 w-12 origin-left transform-gpu text-neutral-700 transition-all duration-300 ease-in-out group-hover:scale-75" /> */}
-            <h3 className="text-xl font-semibold text-neutral-700 dark:text-neutral-300">
-              Miranda
-            </h3>
-            <p className="max-w-lg text-neutral-400">Miranda</p>
+          <div className="w-full h-full pointer-events-none z-10 flex flex-col gap-1 p-6 ">
+            <VideoPlayer />
           </div>
         </div>
 
