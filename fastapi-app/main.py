@@ -1,9 +1,9 @@
+import json
 import os
 import re
 import shutil
 import subprocess
 import uuid
-import json
 
 import detector
 from fastapi import FastAPI, HTTPException, UploadFile
@@ -11,14 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
-
 _UPLOADS_DIR = "temp-uploads"
 _ANALYZED_DIR = "temp-analyzed"
 _STATIC_DIR = "static"
 _HLS_DIR = os.path.join(_STATIC_DIR, "hls")
 _DATA_DIR = os.path.join(_STATIC_DIR, "data")
 _VIDEO_MANIFEST_NAME = "playlist.m3u8"
-
 
 shutil.rmtree(_UPLOADS_DIR, ignore_errors=True)
 os.makedirs(_UPLOADS_DIR, exist_ok=True)
@@ -48,7 +46,7 @@ def _get_ffmpeg_command(input_path: str, output_manifest_path: str) -> list[str]
     return [
         "ffmpeg",
         "-i", input_path,
-        "-profile:v", "baseline",  # Broad compatibility
+        "-profile:v", "baseline",
         "-level", "3.0",
         "-start_number", "0",  # Start segment index at 0
         "-hls_time", "10",  # 10-second segments
@@ -71,6 +69,8 @@ def upload_process_video(file: UploadFile) -> dict[str, str]:
         temp_video_path, temp_analyzed_video_path
     )
     os.remove(temp_video_path)
+    if not os.path.exists(temp_analyzed_video_path):
+        raise HTTPException(status_code=500, detail="Failed to analyze video")
 
     # Generate unique identifier for video
     video_uuid = str(uuid.uuid4())
@@ -90,7 +90,7 @@ def upload_process_video(file: UploadFile) -> dict[str, str]:
     result = subprocess.run(cmd, capture_output=True, text=True)
     os.remove(temp_analyzed_video_path)
     if result.returncode != 0:
-        raise HTTPException(status_code=500, detail=f"FFmpeg failure")
+        raise HTTPException(status_code=500, detail=f"FFmpeg failed")
     
     return {
         "hls_manifest": f"/stream/{video_uuid}",
@@ -99,11 +99,13 @@ def upload_process_video(file: UploadFile) -> dict[str, str]:
 
 
 @app.get("/stream/{video_uuid}")
-def get_video_manifest(video_uuid: str):
+def get_video_manifest(video_uuid: str) -> str:
+    # Sanity check
     video_dir = os.path.join(_HLS_DIR, video_uuid)
-    if not os.path.exists(video_dir) or len(os.listdir(video_dir)) == 0 or _VIDEO_MANIFEST_NAME not in os.listdir(video_dir):
+    if not os.path.exists(video_dir) or len(os.listdir(video_dir)) == 0 \
+       or _VIDEO_MANIFEST_NAME not in os.listdir(video_dir):
         return HTTPException(status_code=404, detail="Video not found")
-    video_segment_regex = re.compile(r"(.*.ts)\n")
+    
     video_manifest_path = os.path.join(video_dir, _VIDEO_MANIFEST_NAME)
     manifest_content = None
     try:
@@ -111,18 +113,25 @@ def get_video_manifest(video_uuid: str):
             manifest_content = manifest_file.read()
     except OSError:
         return HTTPException(status_code=500, detail="Failed to read video manifest")
+    
     # Replace inaccurate relative video segment paths with correct absolute paths
-    manifest_content = re.sub(video_segment_regex, f"hls/{video_uuid}/\\1\n", manifest_content)
-    return Response(
-        content=manifest_content, media_type="application/vnd.apple.mpegurl"
+    video_segment_regex = re.compile(r"(.*.ts)\n")
+    manifest_content = re.sub(
+        video_segment_regex,
+        f"hls/{video_uuid}/\\1\n", manifest_content
     )
+
+    return Response(content=manifest_content, media_type="application/vnd.apple.mpegurl")
 
 
 @app.get("/data/{video_uuid}")
-def get_video_garbage_data(video_uuid: str):
+def get_video_garbage_data(video_uuid: str) -> dict[str, int | dict[str, int]]:
+    # Sanity check
     video_dir = os.path.join(_HLS_DIR, video_uuid)
-    if not os.path.exists(video_dir) or len(os.listdir(video_dir)) == 0 or _VIDEO_MANIFEST_NAME not in os.listdir(video_dir):
+    if not os.path.exists(video_dir) or len(os.listdir(video_dir)) == 0 \
+       or _VIDEO_MANIFEST_NAME not in os.listdir(video_dir):
         return HTTPException(status_code=404, detail="Video not found")
+    
     video_garbage_data_path = os.path.join(_DATA_DIR, f"{video_uuid}.json")
     garbage_data = None
     try:
@@ -130,5 +139,6 @@ def get_video_garbage_data(video_uuid: str):
             garbage_data = json.load(data_file)
     except OSError:
         return HTTPException(status_code=500, detail="Failed to read video garbage data")
+    
     return garbage_data
     
