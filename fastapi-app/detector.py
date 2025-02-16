@@ -52,7 +52,11 @@ class TACOTracker:
 
         # Run inference on YOLOv8.
         results = self.model(
-            frame, conf=self.conf_threshold, iou=self.iou_threshold, verbose=False
+            frame,
+            conf=self.conf_threshold,
+            iou=self.iou_threshold,
+            imgsz=(736, 1280),
+            verbose=False,
         )[0]
 
         # Extract detections and format for SORT.
