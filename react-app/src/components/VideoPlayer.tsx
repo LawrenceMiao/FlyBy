@@ -7,7 +7,7 @@ const VideoPlayer: React.FC = () => {
   useEffect(() => {
     if (Hls.isSupported() && videoRef.current) {
       const hls = new Hls();
-      hls.loadSource("http://localhost:8000/videos/output.m3u8");
+      hls.loadSource("http://carpi.cs.rpi.edu:8000/stream");
       hls.attachMedia(videoRef.current);
     }
   }, []);
