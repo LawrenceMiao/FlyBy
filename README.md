@@ -1,33 +1,34 @@
 # FlyBy
 > By Lawrence Miao, Miranda Zheng, and Raymond Chen
 
-A project for the February 2025 NSBE-SHPE Climate Change & Sustainability Hackathon @ Rensselaer Polytechnic Institute.
- 
-FlyBy is an AI-powered web application that leverages a [YOLOv5](https://github.com/ultralytics/yolov5) vision model and the [TACO dataset](https://github.com/pedropro/TACO) to detect and classify trash easily and effectively.
-## How does it work?
-1. On the website, upload a video of drone footage to analyze for trash.
-2. The system will analyze the video in no more than a few minutes.
-3. The video is played back to you with bounding boxes and classifications drawn on top of all instances of detected trash!
-4. You will also see metrics including:
-    - Total number of detected items.
-    - A breakdown detailing the number of each item type detected.
-## Project Issue
-Every year, 19 - 23 MILLION tons of plastic waste are dumped into our oceans. This in turn leaks into aquatic ecosystems, polluting lakes, rivers and seas. It's polluting habitats, contributing to the already high level of methane emissions, and affecting the livelihood of all animals.
+Second place winner of the 2025 NSBE x SHPE Climate Change & Sustainability Hackathon @ Rensselaer Polytechnic Institute.
+## What is it?
+FlyBy is a web application that leverages deep-learning computer vision to detect and analyze marine trash in aerial footage. It leverages a [YOLOv5](https://github.com/ultralytics/yolov5) vision model trained on the [TACO dataset](https://github.com/pedropro/TACO).
 
-We're proud to present FlyBy: our 24-hour solution to mitiagting this long-standing problem!
+It was designed in response to the prompt: "Develop an application that can address the emerging and/or long-standing issues in the field of climate change and sustainability."
+## How Do I Use It?
+1. On the website, upload aerial footage to analyze for trash.
+2. The system will take some time to analyze the video, proportional to video length.
+3. The video will then be played back with bounding boxes and classifications drawn over all instances of detected trash.
+4. You will also see metrics on the page including:
+    - Total number of detected trash items.
+    - Trash breakdown detailing the number of each item type detected.
 
-The system integrates with a drone-mounted camera to analyze remote environments such as oceans, forests, and other inaccessible areas where manual waste monitoring is challenging.
+![Website Screenshot](sample-screenshots/drone_sample_analyzed.png)
+## The Issue at Hand
+Every year, 19 - 23 million tons of plastic waste are dumped into our oceans.<sup>[1](https://www.unep.org/plastic-pollution)</sup> This in turn leaks into aquatic ecosystems, polluting lakes, rivers and seas. It's polluting habitats, contributing to the already high level of methane emissions, and affecting the livelihood of all animals.<sup>[2](https://www.earthday.org/how-our-trash-impacts-the-environment/)</sup>
+
+We're proud to present FlyBy: our solution to mitiagting this long-standing problem, made in 24 hours!
+
+The system integrates with a drone-mounted camera to analyze oceans and other water environments, where manual waste monitoring is challenging.
 ## Use Cases
-- Ocean Cleanup
-- Forest and Wildlife Conservation
-- Smart Cities and Waste Management
-- Disaster Relief and Emergency Response
+- Monitor distribution of waste over time
+- Identify debris hotspots
+- Gauge effectiveness of cleanup efforts
 ## Target Audiences
 - Environmental Conservation Groups
 - Municipal Government Waste Management Departments
-- Marine and Wildlife Protection Agencies
-- Drone Communities
-## Our Technology Stack
+## Tech Stack
 **Front-end:** React with TypeScript and TailwindCSS. \
 **Back-end:** Python with FastAPI and PyTorch. \
 **Model:** YOLOv5 trained on the TACO dataset.
