@@ -7,6 +7,7 @@ const VideoPlayer: React.FC = () => {
   const hlsInstance = useRef<Hls | null>(null);
 
   const [videoAvailable, setVideoAvailable] = useState<boolean>(false);
+  const [videoLoaded, setVideoLoaded] = useState<boolean>(false);
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
 
   const VIDEO_URL = "http://carpi.cs.rpi.edu:8000/stream";
@@ -45,7 +46,7 @@ const VideoPlayer: React.FC = () => {
         hlsInstance.current.destroy();
       }
     };
-  }, [VIDEO_URL]);
+  }, [videoLoaded]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -67,7 +68,7 @@ const VideoPlayer: React.FC = () => {
 
       if (response.ok) {
         console.log("Upload successful");
-        setVideoAvailable(true);
+        setVideoLoaded(true);
       } else {
         console.error("Upload failed");
       }
