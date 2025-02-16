@@ -1,18 +1,19 @@
 import React, { useState , useEffect, useRef } from "react";
 import Hls from "hls.js";
 import { UploadIcon, CheckCircledIcon } from "@radix-ui/react-icons";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const VideoPlayer: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsInstance = useRef<Hls | null>(null);
 
-  const [videoAvailable, setVideoAvailable] = useState<boolean>(false);
-  const [videoLoaded, setVideoLoaded] = useState<boolean>(false);
+  const [videoAvailable, setVideoAvailable] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
 
-  const VIDEO_URL = "http://carpi.cs.rpi.edu:8000/stream";
-
   useEffect(() => {
+    console.log("Component mounted, calling stream...");
+    console.log("Video loaded:", videoLoaded, "Video available:", videoAvailable);
     const video = videoRef.current;
     if (!video) return;
 
@@ -23,11 +24,12 @@ const VideoPlayer: React.FC = () => {
 
       const hls = new Hls({ debug: false });
       hlsInstance.current = hls;
-      hls.loadSource(VIDEO_URL);
+      hls.loadSource("http://74.70.76.86:8000/stream");
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         console.log("HLS manifest loaded successfully.");
+        console.log("Video loaded:", videoLoaded, "Video available:", videoAvailable);
         setVideoAvailable(true);
         video.play().catch(error => console.warn("Autoplay blocked:", error));
       });
@@ -37,7 +39,7 @@ const VideoPlayer: React.FC = () => {
         setVideoAvailable(false);
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = VIDEO_URL;
+      video.src = "http://74.70.76.86:8000/stream";
       video.load();
     }
 
@@ -57,18 +59,19 @@ const VideoPlayer: React.FC = () => {
   const handleUpload = async () => {
     if (!selectedVideo) return;
 
+    setVideoLoaded(true);
+
     const formData = new FormData();
     formData.append("file", selectedVideo);
 
     try {
-      const response = await fetch("http://carpi.cs.rpi.edu:8000/upload", {
+      const response = await fetch("http://74.70.76.86:8000/upload", {
         method: "POST",
         body: formData,
       });
 
       if (response.ok) {
         console.log("Upload successful");
-        setVideoLoaded(true);
       } else {
         console.error("Upload failed");
       }
@@ -79,7 +82,7 @@ const VideoPlayer: React.FC = () => {
 
   return (
     <div className="w-full h-full flex flex-col justify-center items-center">
-      {videoAvailable ? (
+      {videoLoaded ? (
         <video
           ref={videoRef}
           controls
