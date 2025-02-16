@@ -11,13 +11,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
-_UPLOADS_DIR = "temp-uploads"
-_ANALYZED_DIR = "temp-analyzed"
-_STATIC_DIR = "static"
+_UPLOADS_DIR = os.path.abspath("temp-uploads")
+_ANALYZED_DIR = os.path.abspath("temp-analyzed")
+_STATIC_DIR = os.path.abspath("static")
 _HLS_DIR = os.path.join(_STATIC_DIR, "hls")
 _DATA_DIR = os.path.join(_STATIC_DIR, "data")
 _VIDEO_MANIFEST_NAME = "playlist.m3u8"
 
+# Clean temporary storage
 shutil.rmtree(_UPLOADS_DIR, ignore_errors=True)
 os.makedirs(_UPLOADS_DIR, exist_ok=True)
 shutil.rmtree(_ANALYZED_DIR, ignore_errors=True)
@@ -38,8 +39,8 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
-# Make HLS video segments publicly accessible
-app.mount("/hls", StaticFiles(directory=_HLS_DIR), name="hls")
+# Make HLS video segments publicly accessible at /stream/hls
+app.mount("/stream/hls", StaticFiles(directory=_HLS_DIR), name="hls")
 
 
 def _get_ffmpeg_command(input_path: str, output_manifest_path: str) -> list[str]:
@@ -92,10 +93,7 @@ def upload_process_video(file: UploadFile) -> dict[str, str]:
     if result.returncode != 0:
         raise HTTPException(status_code=500, detail=f"FFmpeg failed")
     
-    return {
-        "hls_manifest": f"/stream/{video_uuid}",
-        "video_garbage_data": f"/data/{video_uuid}",
-    }
+    return {"video_uuid": video_uuid}
 
 
 @app.get("/stream/{video_uuid}")
