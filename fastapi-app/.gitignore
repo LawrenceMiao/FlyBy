@@ -163,3 +163,4 @@ cython_debug/
 temp-analyzed/
 temp-uploads/
 static/hls/
+static/data/
