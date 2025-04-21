@@ -7,10 +7,8 @@ services:
       context: ./react-app
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3000:80"
     restart: unless-stopped
-    networks:
-      - app-network
     depends_on:
       - fastapi-app
 
@@ -22,9 +20,3 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
