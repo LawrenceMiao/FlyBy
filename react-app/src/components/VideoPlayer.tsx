@@ -83,7 +83,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ setData }) => {
     if (event.target.files && event.target.files.length > 0) {
       setSelectedVideo(event.target.files[0]);
     }
-  };
+  }; // ed
 
   const handleUpload = async () => {
     if (!selectedVideo) return;
