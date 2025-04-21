@@ -34,7 +34,7 @@ jobs:
           set -e
 
           # Navigate to the project directory
-          cd ~/app
+          cd FlyBy
 
           # Pull the latest code
           git pull origin main
