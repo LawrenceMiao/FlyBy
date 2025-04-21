@@ -1,0 +1,7 @@
+filterpy 
+opencv-python 
+scikit-image
+ultralytics
+fastapi
+uvicorn
+python-multipart

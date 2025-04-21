@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  react-app:
+    image: react-app:latest
+    build:
+      context: ./react-app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      - fastapi-app
+
+  fastapi-app:
+    image: fastapi-app:latest
+    build:
+      context: ./fastapi-app
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

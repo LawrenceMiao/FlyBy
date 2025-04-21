@@ -46,18 +46,31 @@ app.mount("/stream/hls", StaticFiles(directory=_HLS_DIR), name="hls")
 def _get_ffmpeg_command(input_path: str, output_manifest_path: str) -> list[str]:
     return [
         "ffmpeg",
-        "-i", input_path,
-        "-profile:v", "baseline",
-        "-level", "3.0",
-        "-start_number", "0",  # Start segment index at 0
-        "-hls_time", "10",  # 10-second segments
-        "-hls_list_size", "0",  # Keep all segments in the manifest
-        "-f", "hls",
+        "-i",
+        input_path,
+        "-profile:v",
+        "baseline",
+        "-level",
+        "3.0",
+        "-start_number",
+        "0",  # Start segment index at 0
+        "-hls_time",
+        "10",  # 10-second segments
+        "-hls_list_size",
+        "0",  # Keep all segments in the manifest
+        "-f",
+        "hls",
         output_manifest_path,
     ]
 
 
-@app.post("/upload")
+@app.get("/health")
+def health_check() -> dict[str, str]:
+    """Simple endpoint to verify the API is online and responding."""
+    return {"status": "online", "message": "API is running"}
+
+
+@app.post("/")
 def upload_process_video(file: UploadFile) -> dict[str, str]:
     # Save uploaded video to storage
     temp_video_path = os.path.join(_UPLOADS_DIR, file.filename)
@@ -92,7 +105,7 @@ def upload_process_video(file: UploadFile) -> dict[str, str]:
     os.remove(temp_analyzed_video_path)
     if result.returncode != 0:
         raise HTTPException(status_code=500, detail=f"FFmpeg failed")
-    
+
     return {"video_uuid": video_uuid}
 
 
@@ -100,10 +113,13 @@ def upload_process_video(file: UploadFile) -> dict[str, str]:
 def get_video_manifest(video_uuid: str) -> str:
     # Sanity check
     video_dir = os.path.join(_HLS_DIR, video_uuid)
-    if not os.path.exists(video_dir) or len(os.listdir(video_dir)) == 0 \
-       or _VIDEO_MANIFEST_NAME not in os.listdir(video_dir):
+    if (
+        not os.path.exists(video_dir)
+        or len(os.listdir(video_dir)) == 0
+        or _VIDEO_MANIFEST_NAME not in os.listdir(video_dir)
+    ):
         return HTTPException(status_code=404, detail="Video not found")
-    
+
     video_manifest_path = os.path.join(video_dir, _VIDEO_MANIFEST_NAME)
     manifest_content = None
     try:
@@ -111,32 +127,37 @@ def get_video_manifest(video_uuid: str) -> str:
             manifest_content = manifest_file.read()
     except OSError:
         return HTTPException(status_code=500, detail="Failed to read video manifest")
-    
+
     # Replace inaccurate relative video segment paths with correct absolute paths
     video_segment_regex = re.compile(r"(.*.ts)\n")
     manifest_content = re.sub(
-        video_segment_regex,
-        f"hls/{video_uuid}/\\1\n", manifest_content
+        video_segment_regex, f"hls/{video_uuid}/\\1\n", manifest_content
     )
 
-    return Response(content=manifest_content, media_type="application/vnd.apple.mpegurl")
+    return Response(
+        content=manifest_content, media_type="application/vnd.apple.mpegurl"
+    )
 
 
 @app.get("/data/{video_uuid}")
 def get_video_garbage_data(video_uuid: str) -> dict[str, int | dict[str, int]]:
     # Sanity check
     video_dir = os.path.join(_HLS_DIR, video_uuid)
-    if not os.path.exists(video_dir) or len(os.listdir(video_dir)) == 0 \
-       or _VIDEO_MANIFEST_NAME not in os.listdir(video_dir):
+    if (
+        not os.path.exists(video_dir)
+        or len(os.listdir(video_dir)) == 0
+        or _VIDEO_MANIFEST_NAME not in os.listdir(video_dir)
+    ):
         return HTTPException(status_code=404, detail="Video not found")
-    
+
     video_garbage_data_path = os.path.join(_DATA_DIR, f"{video_uuid}.json")
     garbage_data = None
     try:
         with open(video_garbage_data_path, "r") as data_file:
             garbage_data = json.load(data_file)
     except OSError:
-        return HTTPException(status_code=500, detail="Failed to read video garbage data")
-    
+        return HTTPException(
+            status_code=500, detail="Failed to read video garbage data"
+        )
+
     return garbage_data
-    
