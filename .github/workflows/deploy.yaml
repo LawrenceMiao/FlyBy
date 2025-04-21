@@ -43,10 +43,10 @@ jobs:
           sudo docker buildx bake -f docker-bake.hcl
 
           # Start the containers using Docker Compose
-          sudo docker-compose up -d --build
+          sudo docker compose up -d --build
 
           # Prune old images to save space
-          docker image prune -f
+          sudo docker image prune -f
           EOL
 
           # Copy deployment script to EC2
