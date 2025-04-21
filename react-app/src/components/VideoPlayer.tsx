@@ -1,4 +1,4 @@
-import React, { useState , useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Hls from "hls.js";
 import { UploadIcon, CheckCircledIcon } from "@radix-ui/react-icons";
 
@@ -15,7 +15,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ setData }) => {
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [UIUD, setUIUD] = useState<string>("");
 
-  const API_BASE_URL = "http://74.70.76.86:8000";
+  const API_BASE_URL =
+    "http://ec2-3-145-106-40.us-east-2.compute.amazonaws.com:8000";
 
   // HLS STREAMING
   useEffect(() => {
@@ -45,7 +46,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ setData }) => {
           console.log("HLS manifest loaded successfully.");
           setVideoAvailable(true);
           loadData();
-          video.play().catch(error => console.warn("Autoplay blocked:", error));
+          video
+            .play()
+            .catch((error) => console.warn("Autoplay blocked:", error));
         });
 
         hls.on(Hls.Events.ERROR, (_, data) => {
@@ -64,7 +67,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ setData }) => {
       const response = await fetch(API_BASE_URL + "/data/" + UIUD);
       const data = await response.json();
       setData(data);
-    }
+    };
 
     loadHlsStream();
 
@@ -121,11 +124,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ setData }) => {
       ) : (
         <div className="relative z-50 pointer-events-auto flex flex-col items-center border-2 border-dashed p-6 rounded-lg">
           <p className="text-gray-500 mb-2">No video available. Upload one!</p>
-          
+
           <div className="m-4">
-            <label htmlFor="file-upload" className="flex flex-col items-center cursor-pointer">
-              {selectedVideo != null ? <CheckCircledIcon className="h-12 w-12 text-gray-400 mb-2"/> : <UploadIcon className="h-12 w-12 text-gray-400 mb-2" />}
-              <span className="text-sm text-gray-500">{selectedVideo != null ? "Video Loaded" : "Click to upload"}</span>
+            <label
+              htmlFor="file-upload"
+              className="flex flex-col items-center cursor-pointer"
+            >
+              {selectedVideo != null ? (
+                <CheckCircledIcon className="h-12 w-12 text-gray-400 mb-2" />
+              ) : (
+                <UploadIcon className="h-12 w-12 text-gray-400 mb-2" />
+              )}
+              <span className="text-sm text-gray-500">
+                {selectedVideo != null ? "Video Loaded" : "Click to upload"}
+              </span>
             </label>
             <input
               id="file-upload"
