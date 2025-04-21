@@ -28,29 +28,15 @@ jobs:
           EC2_HOST: 3.145.106.40
           EC2_USER: ubuntu
         run: |
-          # Create deployment script
           cat > deploy.sh << 'EOL'
-          #!/bin/bash
           set -e
-
-          # Navigate to the project directory
           cd FlyBy
-
-          # Pull the latest code
           git pull origin main
-
-          # Build the Docker images using Docker Bake
           sudo docker buildx bake -f docker-bake.hcl
-
-          # Start the containers using Docker Compose
           sudo docker compose up -d --build
-
-          # Prune old images to save space
           sudo docker image prune -f
           EOL
 
-          # Copy deployment script to EC2
           scp deploy.sh ubuntu@3.145.106.40:~/deploy.sh
 
-          # Execute deployment script
           ssh ubuntu@3.145.106.40 "chmod +x ~/deploy.sh && ~/deploy.sh"
