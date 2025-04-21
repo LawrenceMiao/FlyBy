@@ -70,7 +70,7 @@ def health_check() -> dict[str, str]:
     return {"status": "online", "message": "API is running"}
 
 
-@app.post("/")
+@app.post("/upload")
 def upload_process_video(file: UploadFile) -> dict[str, str]:
     # Save uploaded video to storage
     temp_video_path = os.path.join(_UPLOADS_DIR, file.filename)
