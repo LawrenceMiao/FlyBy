@@ -231,7 +231,7 @@ def process_video(video_path: str, output_path: str) -> dict:
 if __name__ == "__main__":
 
     # Path to input video
-    VIDEO_PATH = "drone.mov"
+    VIDEO_PATH = "drone_sample.mov"
 
     # Path to output video with annotations
     OUTPUT_PATH = "annotations.mp4"
